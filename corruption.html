@@ -3,23 +3,18 @@
 <style>
 
 path {
-  fill: #ccc;
   stroke: #fff;
   stroke-width: .5px;
 }
 
-path:hover {
-  fill: red;
-}
-
 </style>
 <body>
-<script src="https://d3js.org/d3.v3.min.js"></script>
-<script src="https://d3js.org/topojson.v1.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
 <script>
 
 var width = 960,
-    height = 500;
+    height = 1000;
 
 var path = d3.geo.path();
 
@@ -29,8 +24,7 @@ var svg = d3.select("body").append("svg")
 
 var url = "data/map/topojson/counties.json"
 
-d3.csv("data/corruption/corruption_clean.csv", function(d) {
-  console.log(d)
+d3.csv("data/corruption/corruption_clean.csv", function(d) {  
   return {    
     county: d.county,
     region: d.region,
@@ -39,24 +33,60 @@ d3.csv("data/corruption/corruption_clean.csv", function(d) {
     status: d.status
   };
 }, function(error, rows) {
-    console.log(rows);
+    console.log(rows);    
     draw_topo(rows);
+    //console.log(d3.data(rows));    
 });
 
 function draw_topo(rows) {
+    
 
     d3.json(url, function(error, topodata) {
       if (error) throw error;    
       
-      console.log("topojson", topodata);
-      console.log("AA", topojson.feature(topodata, topodata.objects["map"]));
+      //console.log("topojson", topodata);
+      //console.log("AA", topojson.feature(topodata, topodata.objects["map"]));
       var features = topojson.feature(topodata, topodata.objects["map"]).features;
       var path = d3.geo.path().projection(
-        d3.geo.mercator().center([121,24]).scale(6000)
+        d3.geo.mercator().center([121,25]).scale(8000)
       );
+      
+      features.forEach(function (feature, index) {
+          var green_array = rows.filter(obj => {
+            return obj.party === "民主進步黨" && obj.county === feature.properties.name;
+          })
+          
+          var blue_array = rows.filter(obj => {          
+            console.log(obj.party, obj.county, feature.properties.name);  
+            return obj.party === "中國國民黨" && obj.county === feature.properties.name;
+          })
+          
+          if(blue_array.length === 0 && green_array.length === 0) {
+              
+              color = "#CCC";
+              
+          } else {
+              
+              if(blue_array.length > green_array.length) {
+                  color = "#00F";
+              } else {                  
+                  if(blue_array.length < green_array.length) {          
+                      color = "#0F0";
+                  } else {
+                      color = "#000";
+                  }
+              }
+              
+          }
+      
+          feature.properties.color = color;
+      });                        
       
       d3.select("svg").selectAll("path").data(features)
         .enter().append("path").attr("d",path);
+        
+      d3.select("svg").selectAll("path").attr({'fill': function(d){console.log(d);return d.properties.color;}});
+      
     });
 }
 </script>
