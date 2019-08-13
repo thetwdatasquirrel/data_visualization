@@ -30,11 +30,13 @@ var svg = d3.select("body").append("svg")
 var url = "data/map/topojson/counties.json"
 
 d3.csv("data/corruption/corruption_clean.csv", function(d) {
-  return {
-    year: new Date(+d.Year, 0, 1), // convert "Year" column to Date
-    make: d.Make,
-    model: d.Model,
-    length: +d.Length // convert "Length" column to number
+  console.log(d)
+  return {    
+    county: d.county,
+    region: d.region,
+    name: d.name,
+    party: d.party,
+    status: d.status
   };
 }, function(error, rows) {
     console.log(rows);
