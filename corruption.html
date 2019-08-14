@@ -7,22 +7,38 @@ path {
   stroke-width: .5px;
 }
 
+svg {
+  display: inline-block;
+}
+
 </style>
 <body>
 <script src="https://d3js.org/d3.v3.min.js"></script>
 <script src="https://d3js.org/topojson.v1.min.js"></script>
 <script>
 
-var width = 960,
+var width = 1000,
     height = 1000;
+
+var scale = 10000;
 
 var path = d3.geo.path();
 
-var svg = d3.select("body").append("svg")
+var svg_corruption = d3.select("body").append("svg")
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
+    .attr("id", "svg_corruption");
+    
+var svg_county_owner = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("id", "svg_county_owner");
+    
 
 var url = "data/map/topojson/counties.json"
+
+var csv = null;
+var county_owner = {"連江縣": "b", "金門縣": "b", "宜蘭縣": "b", "彰化縣": "b", "南投縣": "b", "雲林縣": "b", "屏東縣": "g", "臺東縣": "b", "花蓮縣": "b", "澎湖縣": "b", "基隆市": "g", "新竹市": "g", "臺北市": "n", "新北市": "b", "臺中市": "b", "臺南市": "g", "桃園市": "g", "苗栗縣": "b", "新竹縣": "b", "嘉義市": "b", "嘉義縣": "g", "高雄市": "b"};
 
 d3.csv("data/corruption/corruption_clean.csv", function(d) {  
   return {    
@@ -34,24 +50,32 @@ d3.csv("data/corruption/corruption_clean.csv", function(d) {
   };
 }, function(error, rows) {
     console.log(rows);    
-    draw_topo(rows);
+    csv = rows
+    draw_topo(csv, url);
     //console.log(d3.data(rows));    
 });
 
-function draw_topo(rows) {
-    
+draw_owner(county_owner, url);
+
+
+function draw_topo(rows, url) {    
 
     d3.json(url, function(error, topodata) {
-      if (error) throw error;    
+      if (error) throw error;
       
       //console.log("topojson", topodata);
       //console.log("AA", topojson.feature(topodata, topodata.objects["map"]));
       var features = topojson.feature(topodata, topodata.objects["map"]).features;
       var path = d3.geo.path().projection(
-        d3.geo.mercator().center([121,25]).scale(8000)
+        d3.geo.mercator().center([121,25]).scale(scale)
       );
       
+      var a = "";
+      
       features.forEach(function (feature, index) {
+      
+          a += "\"" + feature.properties.name + "\": \"0\", "
+        
           var green_array = rows.filter(obj => {
             return obj.party === "民主進步黨" && obj.county === feature.properties.name;
           })
@@ -63,7 +87,7 @@ function draw_topo(rows) {
           
           if(blue_array.length === 0 && green_array.length === 0) {
               
-              color = "#CCC";
+              color = "#FF2";
               
           } else {
               
@@ -80,13 +104,54 @@ function draw_topo(rows) {
           }
       
           feature.properties.color = color;
-      });                        
+      });                              
       
-      d3.select("svg").selectAll("path").data(features)
+      d3.select("#svg_corruption").selectAll("path").data(features)
         .enter().append("path").attr("d",path);
         
-      d3.select("svg").selectAll("path").attr({'fill': function(d){console.log(d);return d.properties.color;}});
+      d3.select("#svg_corruption").selectAll("path").attr({'fill': function(d){console.log(d);return d.properties.color;}});
       
     });
+
 }
+
+function draw_owner(owner, url) {
+
+    d3.json(url, function(error, topodata) {
+      if (error) throw error;
+      
+      //console.log("topojson", topodata);
+      //console.log("AA", topojson.feature(topodata, topodata.objects["map"]));
+      var features = topojson.feature(topodata, topodata.objects["map"]).features;
+      var path = d3.geo.path().projection(
+        d3.geo.mercator().center([121,25]).scale(scale)
+      );
+           
+      features.forEach(function (feature, index) {
+          
+          switch(county_owner[feature.properties.name]) {
+              case 'b':
+                  color = "#00F";
+                  break;
+              case 'g':
+                  color = "#0F0";
+                  break;
+              case 'n':
+                  color = "#CCC";
+                  break;
+          }
+               
+          feature.properties.color = color;
+      });                                    
+      
+      d3.select("#svg_county_owner").selectAll("path").data(features)
+        .enter().append("path").attr("d",path);
+        
+      d3.select("#svg_county_owner").selectAll("path").attr({'fill': function(d){console.log(d);return d.properties.color;}});
+      
+    });
+
+}
+
+
 </script>
