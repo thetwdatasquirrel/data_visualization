@@ -1,5 +1,8 @@
 <!DOCTYPE html>
+
+<head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <style>
 
 path {
@@ -12,111 +15,183 @@ svg {
 }
 
 </style>
-<body>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
 <script src="https://d3js.org/d3.v3.min.js"></script>
-<script src="https://d3js.org/topojson.v1.min.js"></script>
+<script src="https://d3js.org/topojson.v1.min.js"></script> 
+
+
+
+</head>
+<body>
+<br>
+<div class="container d-flex flex-column justify-content-center align-items-center">
+    <div class="row h-100">
+        <div class="col">
+            <button type="button" class="btn btn-primary" onClick="drawDefault(csvPath, url)">貪污人數縣市分布</button>
+        </div>
+        <div class="col">
+            <button type="button" class="btn btn-primary" onClick="drawComparison(csvPath, url)">與縣市版圖比較</button>
+        </div>
+    </div>
+</div>
+<br>
 <script>
 
-var width = 1000,
-    height = 1000;
-
-var scale = 10000;
-
-var path = d3.geo.path();
-
-var svg_corruption = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height)
-    .attr("id", "svg_corruption");
-    
-var svg_county_owner = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height)
-    .attr("id", "svg_county_owner");
-    
+var width = screen.width / 2 - 100;
+var height = 1000;
+var scale = 10000;   
 
 var url = "data/map/topojson/counties.json"
-
+var csvPath = "data/corruption/corruption_clean.csv"
 var csv = null;
-var county_owner = {"連江縣": "b", "金門縣": "b", "宜蘭縣": "b", "彰化縣": "b", "南投縣": "b", "雲林縣": "b", "屏東縣": "g", "臺東縣": "b", "花蓮縣": "b", "澎湖縣": "b", "基隆市": "g", "新竹市": "g", "臺北市": "n", "新北市": "b", "臺中市": "b", "臺南市": "g", "桃園市": "g", "苗栗縣": "b", "新竹縣": "b", "嘉義市": "b", "嘉義縣": "g", "高雄市": "b"};
-
-d3.csv("data/corruption/corruption_clean.csv", function(d) {  
-  return {    
-    county: d.county,
-    region: d.region,
-    name: d.name,
-    party: d.party,
-    status: d.status
-  };
-}, function(error, rows) {
-    console.log(rows);    
-    csv = rows
-    draw_topo(csv, url);
-    //console.log(d3.data(rows));    
-});
-
-draw_owner(county_owner, url);
 
 
-function draw_topo(rows, url) {    
+var colorDict = { 
+                  'green': '#0E0',                  
+                  'blue': '#00E',                   
+                  'gold': '#EE2',
+                  'mix': '#0EE'
+                 }
+                 
+/*var colorPair = {
+                  colorDict['green']: colorDict['brightGreen'],
+                  colorDict['brightGreen']: colorDict['green'],
+                  colorDict['blue']: colorDict['brightGreen'],
+                  colorDict['brightGreen']: colorDict['blue']  
+                }*/
 
-    d3.json(url, function(error, topodata) {
-      if (error) throw error;
-      
-      //console.log("topojson", topodata);
-      //console.log("AA", topojson.feature(topodata, topodata.objects["map"]));
-      var features = topojson.feature(topodata, topodata.objects["map"]).features;
-      var path = d3.geo.path().projection(
-        d3.geo.mercator().center([121,25]).scale(scale)
-      );
-      
-      var a = "";
-      
-      features.forEach(function (feature, index) {
-      
-          a += "\"" + feature.properties.name + "\": \"0\", "
-        
-          var green_array = rows.filter(obj => {
-            return obj.party === "民主進步黨" && obj.county === feature.properties.name;
-          })
-          
-          var blue_array = rows.filter(obj => {          
-            console.log(obj.party, obj.county, feature.properties.name);  
-            return obj.party === "中國國民黨" && obj.county === feature.properties.name;
-          })
-          
-          if(blue_array.length === 0 && green_array.length === 0) {
-              
-              color = "#FF2";
-              
-          } else {
-              
-              if(blue_array.length > green_array.length) {
-                  color = "#00F";
-              } else {                  
-                  if(blue_array.length < green_array.length) {          
-                      color = "#0F0";
-                  } else {
-                      color = "#000";
-                  }
-              }
-              
-          }
-      
-          feature.properties.color = color;
-      });                              
-      
-      d3.select("#svg_corruption").selectAll("path").data(features)
-        .enter().append("path").attr("d",path);
-        
-      d3.select("#svg_corruption").selectAll("path").attr({'fill': function(d){console.log(d);return d.properties.color;}});
-      
+
+function brighter(colorHex) {
+    console.log(colorHex);
+    r = Math.min(parseInt(colorHex.substring(1, 2), 16) + 8, 15).toString(16).toUpperCase();
+    g = Math.min(parseInt(colorHex.substring(2, 3), 16) + 8, 15).toString(16).toUpperCase();
+    b = Math.min(parseInt(colorHex.substring(3, 4), 16) + 8, 15).toString(16).toUpperCase();
+    console.log('#' + r + g + b)
+
+    return '#' + r + g + b
+}
+
+
+drawDefault(csvPath, url)
+//drawCorruption(csvPath, url);
+//drawOwner(countyOwner, url);
+
+function remove() {
+    $('svg').remove();
+}
+
+function drawDefault(csvPath, url) {
+    remove();
+    drawCorruption(csvPath, url);
+}
+
+function drawComparison(csvPath, url) {
+    remove();
+    drawCorruption(csvPath, url);
+    drawOwner(url);
+}
+
+function drawCorruption(csvPath, url) {    
+
+    var svgCorruption = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("id", "svgCorruption");   
+
+    d3.csv(csvPath, function(d) {  
+      return {    
+        county: d.county,
+        region: d.region,
+        name: d.name,
+        party: d.party,
+        status: d.status
+      };
+    }, function(error, rows) {
+        console.log(rows);    
+        csv = rows
+        drawTopo(csv, url);
+        //console.log(d3.data(rows));    
     });
+
+    function drawTopo(csv, url) {
+        d3.json(url, function(error, topodata) {
+          if (error) throw error;
+          
+          //console.log("topojson", topodata);
+          //console.log("AA", topojson.feature(topodata, topodata.objects["map"]));
+          var features = topojson.feature(topodata, topodata.objects["map"]).features;
+          var path = d3.geo.path().projection(
+            d3.geo.mercator().center([121,25]).scale(scale)
+          );
+          
+          var a = "";
+          
+          features.forEach(function (feature, index) {
+          
+              a += "\"" + feature.properties.name + "\": \"0\", "
+            
+              var greenArray = csv.filter(obj => {
+                return obj.party === "民主進步黨" && obj.county === feature.properties.name;
+              })
+              
+              var blueArray = csv.filter(obj => {          
+                console.log(obj.party, obj.county, feature.properties.name);  
+                return obj.party === "中國國民黨" && obj.county === feature.properties.name;
+              })
+              
+              if(blueArray.length === 0 && greenArray.length === 0) {
+                  
+                  color = colorDict['gold'];
+                  
+              } else {
+                  
+                  if(blueArray.length > greenArray.length) {
+                      color = colorDict['blue'];
+                  } else {                  
+                      if(blueArray.length < greenArray.length) {          
+                          color = colorDict['green'];
+                      } else {
+                          color = colorDict['mix'];
+                      }
+                  }
+                  
+              }
+          
+              feature.properties.color = color;
+          });
+          
+          d3.select("#svgCorruption").selectAll("path").data(features)
+            .enter().append("path").attr("d",path);
+            
+          d3.select("#svgCorruption").selectAll("path").attr({'fill': function(d){console.log(d);return d.properties.color;}, 
+                                                              'data-original-color': function(d){console.log(d);return d.properties.color;}
+                                                             });
+         -
+          $('#svgCorruption > path').hover(function() {                        
+              $(this).attr('fill', brighter($(this).attr('fill')));                                            
+          }, function() {
+              $(this).attr('fill', $(this).attr('data-original-color'));
+          })
+          
+        });
+    }
 
 }
 
-function draw_owner(owner, url) {
+function drawOwner(url) {
 
+    var svgCountyOwner = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("id", "svgCountyOwner");
+
+    var countyOwner = {"連江縣": "b", "金門縣": "b", "宜蘭縣": "b", "彰化縣": "b", "南投縣": "b", "雲林縣": "b", "屏東縣": "g", "臺東縣": "b", "花蓮縣": "b", "澎湖縣": "b", "基隆市": "g", "新竹市": "g", "臺北市": "n", "新北市": "b", "臺中市": "b", "臺南市": "g", "桃園市": "g", "苗栗縣": "b", "新竹縣": "b", "嘉義市": "b", "嘉義縣": "g", "高雄市": "b"};
+    
     d3.json(url, function(error, topodata) {
       if (error) throw error;
       
@@ -129,7 +204,7 @@ function draw_owner(owner, url) {
            
       features.forEach(function (feature, index) {
           
-          switch(county_owner[feature.properties.name]) {
+          switch(countyOwner[feature.properties.name]) {
               case 'b':
                   color = "#00F";
                   break;
@@ -144,10 +219,19 @@ function draw_owner(owner, url) {
           feature.properties.color = color;
       });                                    
       
-      d3.select("#svg_county_owner").selectAll("path").data(features)
+      d3.select("#svgCountyOwner").selectAll("path").data(features)
         .enter().append("path").attr("d",path);
         
-      d3.select("#svg_county_owner").selectAll("path").attr({'fill': function(d){console.log(d);return d.properties.color;}});
+      d3.select("#svgCountyOwner").selectAll("path").attr({'fill': function(d){console.log(d);return d.properties.color;}, 
+                                                              'data-original-color': function(d){console.log(d);return d.properties.color;}
+                                                             });
+      
+      
+      $('#svgCountyOwner > path').hover(function() {                        
+              $(this).attr('fill', brighter($(this).attr('fill')));                                            
+          }, function() {
+              $(this).attr('fill', $(this).attr('data-original-color'));
+          })
       
     });
 
@@ -155,3 +239,5 @@ function draw_owner(owner, url) {
 
 
 </script>
+
+
