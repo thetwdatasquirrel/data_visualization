@@ -42,7 +42,8 @@ svg {
 </style>
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="http://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+<!--<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
@@ -67,13 +68,13 @@ svg {
 <br>
 
 <div id="svgs" class="container-fluid">
-    <div class="row h-100">
-      <div id="svg1" class="col">
+    <div id="svgRow" class="row h-100">
+      <!--<div id="svg1" class="col">
           
       </div>
       <div id="svg2" class="col">
           
-      </div>
+      </div>-->
   </div>
 </div>
 <script>
@@ -247,7 +248,7 @@ function drawStat(csvPath, url) {
             .scale(x)
             .orient("bottom")
 
-        var svg = d3.select("#svg2").append("svg")
+        var svg = d3.select("#svgRow").append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
             .attr("class", "svg")
@@ -360,7 +361,7 @@ function drawStat(csvPath, url) {
 
 function drawCorruption(csvPath, url, callback = function(){console.log('finished')}) {    
 
-    var svgCorruption = d3.select("#svg1").append("svg")
+    var svgCorruption = d3.select("#svgRow").append("svg")
     .attr("width", width)
     .attr("height", height)
     .attr("id", "svgCorruption");   
@@ -457,10 +458,14 @@ function drawCorruption(csvPath, url, callback = function(){console.log('finishe
 
 function drawOwner(url) {
 
-    var svgCountyOwner = d3.select("#svg2").append("svg")
+    var svgCountyOwner = d3.select("#svgRow").append("svg")
     .attr("width", width)
     .attr("height", height)
-    .attr("id", "svgCountyOwner");
+    .attr("id", "svgCountyOwner")
+    .style("position", "absolute")
+    .style("left", "0px")
+    .style("opacity", "0.2")
+    ;
 
     var countyOwner = {"連江縣": "b", "金門縣": "b", "宜蘭縣": "b", "彰化縣": "b", "南投縣": "b", "雲林縣": "b", "屏東縣": "g", "臺東縣": "b", "花蓮縣": "b", "澎湖縣": "b", "基隆市": "g", "新竹市": "g", "臺北市": "n", "新北市": "b", "臺中市": "b", "臺南市": "g", "桃園市": "g", "苗栗縣": "b", "新竹縣": "b", "嘉義市": "b", "嘉義縣": "g", "高雄市": "b"};
     
@@ -498,6 +503,13 @@ function drawOwner(url) {
                                                             'data-original-color': function(d){console.log(d);return d.properties.color;},
                                                             'data-county': function(d){return d.properties.county;}
                                                              });
+      
+      $("#svgCountyOwner").animate({
+        opacity: 1.0,
+        left: "760px"
+      }, 2000, function() {
+        // Animation complete.
+      });
       
       
       $('#svgCountyOwner > path').hover(function() {                        
